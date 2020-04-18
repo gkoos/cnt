@@ -1,6 +1,9 @@
 #pragma once
 
+#define CT_ABORT_ON_FAIL
+
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
 
@@ -11,6 +14,8 @@
 #define CNT_ANSI_COLOR_GREEN "\x1b[32m"
 #define CNT_ANSI_COLOR_YELLOW "\x1b[33m"
 #define CNT_ANSI_COLOR_RESET "\x1b[0m"
+
+int cnt_abortOnFail = 0;
 
 int cnt_testsRun = 0;
 int cnt_testsPassed = 0;
@@ -82,12 +87,20 @@ void cnt_tearDown();
     }                                                                                      \
     printf("Tests run: %d - Passed: %d, Failed: %d, Skipped: %d\n", cnt_testsRun,          \
            cnt_testsPassed, cnt_testsFailed, cnt_testsSkipped);                            \
-    printf("Time: %.3fs\n", (cnt_endSuite - cnt_startSuite) / 1000.0);                                \
+    printf("Time: %.3fs\n", (cnt_endSuite - cnt_startSuite) / 1000.0);                     \
   } while (0)
 
-#define cnt_fail() \
-  cnt_passed = 0;  \
-  printf(" failure in %s() %s:%d\n", __func__, __FILE__, __LINE__)
+#define cnt_fail()                                                    \
+  do                                                                  \
+  {                                                                   \
+    cnt_passed = 0;                                                   \
+    printf(" failure in %s() %s:%d\n", __func__, __FILE__, __LINE__); \
+    if (cnt_abortOnFail)                                              \
+    {                                                                 \
+      printf(CNT_ANSI_COLOR_RED "Aborting\n" CNT_ANSI_COLOR_RESET);   \
+      exit(0);                                                        \
+    }                                                                 \
+  } while (0)
 
 /*
   Assertion macros

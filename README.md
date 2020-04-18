@@ -89,8 +89,23 @@ Time: 0.044s
 ```
 (The last two lines come from `cnt_end`.)
 
-## Adding New Assertions
+## Abort test on first test failure
+By default `cnt` runs all the tests either they pass or fail (well except a test segfaults or something). If you want to terminate the test runner after the first failure, set the `cnt_abortOnFail` variable:
+```c
+// tests.c
+...
+int main()
+{
+  cnt_abortOnFail = 1;
+  cnt_start();
 
+  ...
+  
+  cnt_end();
+}
+```
+
+## Adding New Assertions
 Assertions are simple macros. It's easy to add new ones by defining them in the file containing your test suite. 
 
 Let's assume we want to test a 2d library that defines a point as follows
@@ -119,6 +134,5 @@ and we need a `cnt_assertPointEqual` assertion:
 ```
 
 ## Todo
-- Ability to abort on first failure
 - More assertions
 - Add fixtures
