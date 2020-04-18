@@ -58,6 +58,9 @@ void test_sqrt_dummy()
 // this is your "test runner"
 int main()
 {
+  // starts timers
+  cnt_start();
+
   // list all the tests you want to run here
   // cnt_run's first parameter is the description of the test,
   // the second param is the function containing the test
@@ -67,7 +70,7 @@ int main()
   // skip this test
   cnt_skip("Totally unrelated test", test_sqrt_dummy);
   
-  // add this to print a summary of the whole test suite at the end of the output
+  // prints a summary of the whole test suite at the end of the output
   cnt_end();
 }
 ```
@@ -76,11 +79,13 @@ Compile `tests.c` and run the tests with `./tests`
 The output should be something like this:
 ```
 ./tests
+tests.c
 PASSED Should correctly calculate integer values (0.000000ms)
 PASSED Should calculate the rounded square root of 2 (0.000000ms)
 SKIPPED Totally unrelated test
 *** Test suite PASSED
 Tests run: 3 - Passed: 2, Failed: 0, Skipped: 1
+Time: 0.044s
 ```
 (The last two lines come from `cnt_end`.)
 

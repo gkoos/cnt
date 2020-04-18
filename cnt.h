@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <time.h>
+#include <sys/time.h>
 
 /*
   Color codes
@@ -19,32 +19,35 @@ int cnt_testsSkipped = 0;
 
 int cnt_passed;
 
+long cnt_startSuite, cnt_endSuite;
+struct timeval cnt_timecheck;
+
 void cnt_setUp();
 void cnt_tearDown();
 
-#define cnt_run(desc, test)                                                                             \
-  do                                                                                                    \
-  {                                                                                                     \
-    clock_t cnt_start, cnt_end;                                                                         \
-    double cnt_cpuTimeUsed;                                                                             \
-    cnt_start = clock();                                                                                \
-    cnt_passed = 1;                                                                                     \
-    cnt_setUp();                                                                                        \
-    test();                                                                                             \
-    cnt_tearDown();                                                                                     \
-    cnt_end = clock();                                                                                  \
-    cnt_cpuTimeUsed = ((double)(cnt_end - cnt_start)) / CLOCKS_PER_SEC * 1000;                          \
-    cnt_testsRun++;                                                                                     \
-    if (cnt_passed)                                                                                     \
-    {                                                                                                   \
-      printf(CNT_ANSI_COLOR_GREEN "PASSED" CNT_ANSI_COLOR_RESET " %s (%fms)\n", desc, cnt_cpuTimeUsed); \
-      cnt_testsPassed++;                                                                                \
-    }                                                                                                   \
-    else                                                                                                \
-    {                                                                                                   \
-      printf(CNT_ANSI_COLOR_RED "FAILED" CNT_ANSI_COLOR_RESET " %s (%fms)\n", desc, cnt_cpuTimeUsed);   \
-      cnt_testsFailed++;                                                                                \
-    }                                                                                                   \
+#define cnt_run(desc, test)                                                                                  \
+  do                                                                                                         \
+  {                                                                                                          \
+    long cnt_start, cnt_end;                                                                                 \
+    gettimeofday(&cnt_timecheck, NULL);                                                                      \
+    cnt_start = (long)cnt_timecheck.tv_sec * 1000 + (long)cnt_timecheck.tv_usec / 1000;                      \
+    cnt_passed = 1;                                                                                          \
+    cnt_setUp();                                                                                             \
+    test();                                                                                                  \
+    cnt_tearDown();                                                                                          \
+    gettimeofday(&cnt_timecheck, NULL);                                                                      \
+    cnt_end = (long)cnt_timecheck.tv_sec * 1000 + (long)cnt_timecheck.tv_usec / 1000;                        \
+    cnt_testsRun++;                                                                                          \
+    if (cnt_passed)                                                                                          \
+    {                                                                                                        \
+      printf(CNT_ANSI_COLOR_GREEN "PASSED" CNT_ANSI_COLOR_RESET " %s (%ldms)\n", desc, cnt_end - cnt_start); \
+      cnt_testsPassed++;                                                                                     \
+    }                                                                                                        \
+    else                                                                                                     \
+    {                                                                                                        \
+      printf(CNT_ANSI_COLOR_RED "FAILED" CNT_ANSI_COLOR_RESET " %s (%ldms)\n", desc, cnt_end - cnt_start);   \
+      cnt_testsFailed++;                                                                                     \
+    }                                                                                                        \
   } while (0)
 
 #define cnt_skip(desc, test)                                                    \
@@ -55,19 +58,31 @@ void cnt_tearDown();
     cnt_testsSkipped++;                                                         \
   } while (0)
 
-#define cnt_end()                                                                                                                      \
-  do                                                                                                                                   \
-  {                                                                                                                                    \
-    printf("*** Test suite ");                                                                                                         \
-    if (cnt_testsFailed)                                                                                                               \
-    {                                                                                                                                  \
-      printf(CNT_ANSI_COLOR_RED "FAILED" CNT_ANSI_COLOR_RESET "\n");                                                                   \
-    }                                                                                                                                  \
-    else                                                                                                                               \
-    {                                                                                                                                  \
-      printf(CNT_ANSI_COLOR_GREEN "PASSED" CNT_ANSI_COLOR_RESET "\n");                                                                 \
-    }                                                                                                                                  \
-    printf("Tests run: %d - Passed: %d, Failed: %d, Skipped: %d\n", cnt_testsRun, cnt_testsPassed, cnt_testsFailed, cnt_testsSkipped); \
+#define cnt_start()                                                                          \
+  do                                                                                         \
+  {                                                                                          \
+    gettimeofday(&cnt_timecheck, NULL);                                                      \
+    cnt_startSuite = (long)cnt_timecheck.tv_sec * 1000 + (long)cnt_timecheck.tv_usec / 1000; \
+    printf("%s\n", __FILE__);                                                                \
+  } while (0);
+
+#define cnt_end()                                                                          \
+  do                                                                                       \
+  {                                                                                        \
+    gettimeofday(&cnt_timecheck, NULL);                                                    \
+    cnt_endSuite = (long)cnt_timecheck.tv_sec * 1000 + (long)cnt_timecheck.tv_usec / 1000; \
+    printf("*** Test suite ");                                                             \
+    if (cnt_testsFailed)                                                                   \
+    {                                                                                      \
+      printf(CNT_ANSI_COLOR_RED "FAILED" CNT_ANSI_COLOR_RESET "\n");                       \
+    }                                                                                      \
+    else                                                                                   \
+    {                                                                                      \
+      printf(CNT_ANSI_COLOR_GREEN "PASSED" CNT_ANSI_COLOR_RESET "\n");                     \
+    }                                                                                      \
+    printf("Tests run: %d - Passed: %d, Failed: %d, Skipped: %d\n", cnt_testsRun,          \
+           cnt_testsPassed, cnt_testsFailed, cnt_testsSkipped);                            \
+    printf("Time: %.3fs\n", (cnt_endSuite - cnt_startSuite) / 1000.0);                                \
   } while (0)
 
 #define cnt_fail() \
